@@ -1,5 +1,7 @@
+import getopt
 import ntcore
-
+import sys
+import cv2
 from config.config import ConfigStore
 
 
@@ -39,3 +41,25 @@ class NTCalibrationCommandSource(CalibrationCommandSource):
             self._capture_flag_entry.set(False)
             return True
         return False
+
+class ArgumentCalibrationCommandSource(CalibrationCommandSource):
+    _calibrate: bool = False
+    _noCapture: bool = False
+    _stop: bool = False
+
+    def __init__(self):
+        opts, args = getopt.getopt(sys.argv[1:],"cn",["calibrate","no-capture"])
+        for opt, arg in opts:
+            if opt in ("-c", "--calibrate"):
+                self._calibrate = True
+            elif opt in ("-n", "--no--capture"):
+                self._noCapture = True
+
+    def get_calibrating(self, config_store: ConfigStore) -> bool:
+        if cv2.pollKey() != -1:
+            self._stop = True
+
+        return self._calibrate and not self._stop
+
+    def get_capture_flag(self, config_store: ConfigStore) -> bool:
+        return not self._noCapture
