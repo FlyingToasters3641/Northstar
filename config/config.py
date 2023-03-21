@@ -22,6 +22,7 @@ class RemoteConfig:
     camera_exposure: int = 35
     camera_gain: int = 0
     fiducial_size_m: float = 6.0 / 39.3701
+    tag_layout: any = None
 
 
 @dataclass

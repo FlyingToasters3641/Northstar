@@ -15,6 +15,7 @@ class ConfigSource:
 class FileConfigSource(ConfigSource):
     CONFIG_FILENAME = "config.json"
     CALIBRATION_FILENAME = "calibration.json"
+    APRILTAGS_MAP_FILENAME = "2023-chargedup.json"
 
     def __init__(self) -> None:
         pass
@@ -26,6 +27,11 @@ class FileConfigSource(ConfigSource):
             config_store.local_config.device_id = config_data["device_id"]
             config_store.local_config.server_ip = config_data["server_ip"]
             config_store.local_config.stream_port = config_data["stream_port"]
+
+        # Load local Apriltags position map
+        with open(self.APRILTAGS_MAP_FILENAME, "r") as apriltags_file:
+            apriltags_map = json.loads(config_file.read())
+        config_store.remote_config.tag_layout = json.loads(apriltags_map)
 
         # Get calibration
         calibration_store = cv2.FileStorage(self.CALIBRATION_FILENAME, cv2.FILE_STORAGE_READ)
@@ -47,6 +53,7 @@ class NTConfigSource(ConfigSource):
     _camera_exposure_sub: ntcore.IntegerSubscriber
     _camera_gain_sub: ntcore.IntegerSubscriber
     _fiducial_size_m_sub: ntcore.DoubleSubscriber
+    _tag_layout_sub: ntcore.DoubleSubscriber
 
     def update(self, config_store: ConfigStore) -> None:
         # Initialize subscribers on first call
@@ -66,6 +73,8 @@ class NTConfigSource(ConfigSource):
                 "camera_gain").subscribe(RemoteConfig.camera_gain)
             self._fiducial_size_m_sub = nt_table.getDoubleTopic(
                 "fiducial_size_m").subscribe(RemoteConfig.fiducial_size_m)
+            self._tag_layout_sub = nt_table.getStringTopic(
+                "tag_layout").subscribe("")
             self._init_complete = True
 
         # Read config data
@@ -76,3 +85,8 @@ class NTConfigSource(ConfigSource):
         config_store.remote_config.camera_exposure = self._camera_exposure_sub.get()
         config_store.remote_config.camera_gain = self._camera_gain_sub.get()
         config_store.remote_config.fiducial_size_m = self._fiducial_size_m_sub.get()
+        try:
+            config_store.remote_config.tag_layout = json.loads(self._tag_layout_sub.get())
+        except:
+            config_store.remote_config.tag_layout = None
+            pass
