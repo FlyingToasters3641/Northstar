@@ -30,8 +30,8 @@ class FileConfigSource(ConfigSource):
 
         # Load local Apriltags position map
         with open(self.APRILTAGS_MAP_FILENAME, "r") as apriltags_file:
-            apriltags_map = json.loads(config_file.read())
-        config_store.remote_config.tag_layout = json.loads(apriltags_map)
+            apriltags_map = json.loads(apriltags_file.read())
+        config_store.remote_config.tag_layout = apriltags_map
 
         # Get calibration
         calibration_store = cv2.FileStorage(self.CALIBRATION_FILENAME, cv2.FILE_STORAGE_READ)
